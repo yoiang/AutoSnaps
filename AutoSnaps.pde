@@ -3,13 +3,28 @@ import java.util.Date;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
+import gifAnimation.*;
+import com.dhchoi.*; // Countdown Timer
+
+int screenWidth, screenHeight;
+
 Capture camera;
 PImage snap;
-int snapTime;
+
+GifMaker animation;
+
+CountdownTimer timer;
+int animationFrameCount;
+float animationFrameDelaySeconds;
+
+int snappedFramesCount;
 
 void setup()
 {
-  size( 420, 200 );
+  screenWidth = 420;
+  screenHeight = 200;
+  size( screenWidth, screenHeight );
+  
   String[] cameras = Capture.list();
   if ( cameras.length > 0 )
   {
@@ -20,18 +35,39 @@ void setup()
   snap = createImage( 1280, 800, RGB );
   snap.loadPixels();
   
-  snapTime = 0;
+  animationFrameCount = 5;
+  animationFrameDelaySeconds = 0.010;
+  
+  animation = new GifMaker(this, fileName() );
+  animation.setRepeat(0);
+  
+  snappedFramesCount = 0;
   
   background( 51 );
+  
+  timer = CountdownTimer.getNewCountdownTimer(this);
+  timer.configure(animationFrameDelayMilliseconds(), animationFrameDelayMilliseconds() );
+  timer.start();
 }
 
-void draw()
+int animationFrameDelayMilliseconds()
 {
-  if ( snapTime == 0 && camera.available() )
-  {    
+  return (int)(animationFrameDelaySeconds * 1000);
+}
+
+String fileName()
+{
+  DateFormat dateFormat = new SimpleDateFormat( "yyyy-MM-dd'T'HH-mm-ss'Z'Z" );
+  Date date = new Date();
+  return "AutoSnap " + dateFormat.format( date ) + ".gif";
+}
+
+void snapPicture()
+{
+  if (camera.available() )
+  {
     camera.read();
     camera.updatePixels();
-    camera.stop();
     
     snap.copy( 
                camera,
@@ -45,20 +81,34 @@ void draw()
                snap.height
                );
                
-    image( snap, 0, 0, 420, 200 );
+    image(snap, 0, 0, screenWidth, screenHeight);
 
-    DateFormat dateFormat = new SimpleDateFormat( "yyyy-MM-dd'T'HH-mm-ss'Z'Z" );
-    Date date = new Date();    
-    snap.save( "AutoSnap " + dateFormat.format( date ) + ".jpeg" );
-    snapTime = millis();
+    animation.addFrame(snap);
+    animation.setDelay(animationFrameDelayMilliseconds());
+    
+    snappedFramesCount ++;
   }
-  
-  if ( snapTime > 0 && millis() - snapTime > 500 )
+}
+
+void onTickEvent(int timerId, long timeLeftUntilFinish)
+{
+}
+
+void onFinishEvent(int timerId)
+{
+  if (snappedFramesCount < animationFrameCount)
   {
+    snapPicture();
+    timer.reset();
+    timer.start();
+  } else
+  {
+    camera.stop();
     exit();
   }
 }
-  
 
-
+void draw()
+{
+}
 
