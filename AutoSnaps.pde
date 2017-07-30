@@ -6,7 +6,8 @@ import java.text.SimpleDateFormat;
 import gifAnimation.*;
 import com.dhchoi.*; // Countdown Timer
 
-int screenWidth, screenHeight;
+int displayWidth = 420;
+int displayHeight = 200;
 
 Capture camera;
 PImage snap;
@@ -21,16 +22,16 @@ int snappedFramesCount;
 
 void setup()
 {
-  screenWidth = 420;
-  screenHeight = 200;
-  size( screenWidth, screenHeight );
+  size( displayWidth, displayHeight );
   
   String[] cameras = Capture.list();
-  if ( cameras.length > 0 )
+  if ( cameras.length == 0 )
   {
-    camera = new Capture( this, cameras[ 0 ] );
-    camera.start();
+    javax.swing.JOptionPane.showMessageDialog(null, "No camera found!");
+    exit();
   }
+  camera = new Capture( this, cameras[ 0 ] );
+  camera.start();
   
   snap = createImage( 1280, 800, RGB );
   snap.loadPixels();
@@ -81,7 +82,7 @@ void snapPicture()
                snap.height
                );
                
-    image(snap, 0, 0, screenWidth, screenHeight);
+    image(snap, 0, 0, displayWidth, displayHeight);
 
     animation.addFrame(snap);
     animation.setDelay(animationFrameDelayMilliseconds());
@@ -90,11 +91,11 @@ void snapPicture()
   }
 }
 
-void onTickEvent(int timerId, long timeLeftUntilFinish)
+void onTickEvent(CountdownTimer t, long timeLeftUntilFinish)
 {
 }
 
-void onFinishEvent(int timerId)
+void onFinishEvent(CountdownTimer t)
 {
   if (snappedFramesCount < animationFrameCount)
   {
@@ -111,4 +112,3 @@ void onFinishEvent(int timerId)
 void draw()
 {
 }
-
